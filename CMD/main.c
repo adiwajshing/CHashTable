@@ -7,9 +7,10 @@
 //
 
 #include <stdio.h>
+#include "hash_table_tests.h"
 
 int main(int argc, const char * argv[]) {
     // insert code here...
-    printf("Hello, World!\n");
+    run_all_tests();
     return 0;
 }
