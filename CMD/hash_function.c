@@ -18,8 +18,8 @@ HashKeyType hash_function_default (char *data, int len) {
 }
 
 ///Implementation of the java string hashing function
-HashKeyType hash_function_java_string (char *data, int len) {
-    HashKeyType hash = 0;
+HashKeyType hash_function_DJB2 (char *data, int len) {
+    HashKeyType hash = 5381;
     for (int i = 0; i < len;i++) {
         hash += (hash<<5)-hash + data[i];
     }
@@ -32,18 +32,27 @@ uint8_t rotl (uint8_t n, unsigned int c)
 }
 HashKeyType hash_function_singh (char *data, int len) {
     
-    const int arr_size_len = 27;
+   /* const int arr_size_len = 81;
     const HashKeyType arr_sizes[] = {
-        11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127
-    };
+        2,3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173
+        , 179, 181, 191, 193, 197, 199, 211, 223, 227, 229
+        , 233, 239, 241, 251, 257, 263, 269, 271, 277, 281
+        , 283, 293, 307, 311, 313, 317, 331, 337, 347, 349
+        , 353, 359, 367, 373, 379, 383, 389, 397, 401, 409
+        , 419, 421
+    };*/
+    
     
     HashKeyType hash = 11;
+    HashKeyType prime1 = 31;
+    HashKeyType prime2 = 311;
+    
     for (int i = 0; i < len;i++) {
-        HashKeyType prime1 = arr_sizes[(data[i] ^ i) % arr_size_len];
-        hash = (hash * prime1) + rotl(data[i] ^ (len-i), 4);
+        
+        hash = (hash * prime1) + rotl((data[i] ^ prime2) ^ (len-i), 4);
+        hash = hash * prime2;
     }
     hash += (hash << 3);
-    hash ^= (hash >> 11);
     return hash;
 }
 
@@ -124,11 +133,7 @@ HashKeyType hash_function_CRC32 (char *data, int len) {
     }
     return ~crc;
 }
-
-float hash_function_compute_complexity (HashingFunction hash_function) {
-    
-    const int num_iterations = 500000;
-    
+float hash_function_compute_time (HashingFunction hash_function, int num_iterations) {
     struct timespec start, end;
     
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
@@ -137,38 +142,56 @@ float hash_function_compute_complexity (HashingFunction hash_function) {
         uint64_t key = (i + 47)*3;
         hash_function((char *) &key, sizeof(uint32_t));
     }
-    
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     uint64_t n = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
     
-   // printf("%llu\n", n);
+    return (float)n/1000000;
+}
+float hash_function_compute_complexity_ratio (HashingFunction hash_function) {
     
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+    const int num_iterations = 500000;
     
-    for (int i = 0; i < num_iterations;i++) {
-        uint64_t key = (i + 47)*3;
-        hash_function((char *) &key, sizeof(uint64_t));
-    }
-    
-    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-    uint64_t n2 = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
-
-    float ratio = (float)n2/(float)n;
+    float t = hash_function_compute_time(hash_function, num_iterations);
+    float t2 = hash_function_compute_time(hash_function, num_iterations*2);
+    float ratio = (float)t2/(float)t;
     return ratio;
 }
-float hash_function_variance (HashingFunction hash_function, int number_of_unique_items, int array_size) {
+float hash_function_variance (HashingFunction hash_function, int number_of_unique_items, int array_size, int distribution_type) {
 
     const int item_len = 64;
-    //const int item_divs = item_len/sizeof(uint32_t);
     char items[number_of_unique_items][item_len];
     
-    for (int i = 0; i < number_of_unique_items;i++) {
-        //uint32_t *ptr = (uint32_t *)items[i];
-        for (int j = 0; j < item_len;j++) {
-            items[i][j] = rand() % ('~'-'A') + 'A';
-        }
-       // printf("%s\n", items[i]);
+    switch (distribution_type) {
+        case HASH_DIST_INCREMENTAL:
+            for (int i = 0; i < number_of_unique_items;i++) {
+                uint32_t *ptr = (uint32_t *) items[i];
+                const int divs = item_len/sizeof(uint32_t);
+                for (int j = 0; j < divs;j++) {
+                    ptr[j] = (i*number_of_unique_items + j);
+                }
+            }
+            break;
+        case HASH_DIST_FULLRANDOM:
+            
+            for (int i = 0; i < number_of_unique_items;i++) {
+                for (int j = 0; j < item_len;j++) {
+                    items[i][j] = rand() % 256;
+                }
+            }
+            
+            break;
+        case HASH_DIST_ALPHANUMERIC:
+            for (int i = 0; i < number_of_unique_items;i++) {
+                for (int j = 0; j < item_len;j++) {
+                    items[i][j] = rand() % ('~'-'A') + 'A';
+                }
+            }
+            break;
+        default:
+            break;
     }
+    
+    
     
     float items_per_slot[array_size];
     memset(items_per_slot, 0, sizeof(items_per_slot[0])*array_size);
@@ -187,7 +210,7 @@ float hash_function_variance (HashingFunction hash_function, int number_of_uniqu
     
     return variance;
 }
-void hash_function_chi_square_test (HashingFunction hash_function) {
+float hash_function_chi_square_test (HashingFunction hash_function, int distribution_type) {
     
     const int arr_size_len = 406;
     const int arr_sizes[] = {
@@ -241,14 +264,14 @@ void hash_function_chi_square_test (HashingFunction hash_function) {
         int arr_size = arr_sizes[i];
         float expectation = (float)num_items/arr_size;
         
-        float variance = hash_function_variance(hash_function, num_items, arr_size);
+        float variance = hash_function_variance(hash_function, num_items, arr_size, distribution_type);
         double chisq = chisqr(arr_size, variance);
 
-        printf("arr_size = %d E = %f, V = %f, confidence = %f\n", arr_size, expectation, variance, chisq);
+       // printf("arr_size = %d E = %f, V = %f, confidence = %f\n", arr_size, expectation, variance, chisq);
         overall_variance += (variance-1)*(variance-1);
         overall_confidence += chisq;
     }
     overall_confidence /= arr_size_len;
     printf("overall variance = %f, chisq = %f\n", overall_variance, overall_confidence);
-    
+    return overall_variance;
 }
