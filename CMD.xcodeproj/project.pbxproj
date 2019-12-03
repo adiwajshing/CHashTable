@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		8937E4342394F32E00DC017D /* hash_table.c in Sources */ = {isa = PBXBuildFile; fileRef = 8937E4332394F32E00DC017D /* hash_table.c */; };
+		8937E43C23963B9000DC017D /* hash_function.c in Sources */ = {isa = PBXBuildFile; fileRef = 8937E43B23963B9000DC017D /* hash_function.c */; };
+		8937E44223964AE800DC017D /* gamma.c in Sources */ = {isa = PBXBuildFile; fileRef = 8937E44023964AE800DC017D /* gamma.c */; };
+		8937E44323964AE800DC017D /* chisqr.c in Sources */ = {isa = PBXBuildFile; fileRef = 8937E44123964AE800DC017D /* chisqr.c */; };
 		8968F3F5221D2B2300AE1359 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 8968F3F4221D2B2300AE1359 /* main.c */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +31,12 @@
 		8937E4332394F32E00DC017D /* hash_table.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hash_table.c; sourceTree = "<group>"; };
 		8937E43823954A6B00DC017D /* hash_table_tests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_table_tests.h; sourceTree = "<group>"; };
 		8937E4392395A77400DC017D /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = readme.md; sourceTree = "<group>"; };
+		8937E43A23963B9000DC017D /* hash_function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_function.h; sourceTree = "<group>"; };
+		8937E43B23963B9000DC017D /* hash_function.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hash_function.c; sourceTree = "<group>"; };
+		8937E43E23964AE800DC017D /* gamma.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gamma.h; sourceTree = "<group>"; };
+		8937E43F23964AE800DC017D /* chisqr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = chisqr.h; sourceTree = "<group>"; };
+		8937E44023964AE800DC017D /* gamma.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gamma.c; sourceTree = "<group>"; };
+		8937E44123964AE800DC017D /* chisqr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = chisqr.c; sourceTree = "<group>"; };
 		8968F3F1221D2B2300AE1359 /* CMD */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CMD; sourceTree = BUILT_PRODUCTS_DIR; };
 		8968F3F4221D2B2300AE1359 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -43,6 +52,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8937E43D23964ADE00DC017D /* chisq */ = {
+			isa = PBXGroup;
+			children = (
+				8937E44123964AE800DC017D /* chisqr.c */,
+				8937E43F23964AE800DC017D /* chisqr.h */,
+				8937E44023964AE800DC017D /* gamma.c */,
+				8937E43E23964AE800DC017D /* gamma.h */,
+			);
+			path = chisq;
+			sourceTree = "<group>";
+		};
 		8968F3E8221D2B2300AE1359 = {
 			isa = PBXGroup;
 			children = (
@@ -62,9 +82,12 @@
 		8968F3F3221D2B2300AE1359 /* CMD */ = {
 			isa = PBXGroup;
 			children = (
+				8937E43D23964ADE00DC017D /* chisq */,
 				8968F3F4221D2B2300AE1359 /* main.c */,
 				8937E4322394F32E00DC017D /* hash_table.h */,
 				8937E4332394F32E00DC017D /* hash_table.c */,
+				8937E43A23963B9000DC017D /* hash_function.h */,
+				8937E43B23963B9000DC017D /* hash_function.c */,
 				8937E43823954A6B00DC017D /* hash_table_tests.h */,
 				8937E4392395A77400DC017D /* readme.md */,
 			);
@@ -127,8 +150,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8937E44323964AE800DC017D /* chisqr.c in Sources */,
 				8937E4342394F32E00DC017D /* hash_table.c in Sources */,
+				8937E43C23963B9000DC017D /* hash_function.c in Sources */,
 				8968F3F5221D2B2300AE1359 /* main.c in Sources */,
+				8937E44223964AE800DC017D /* gamma.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

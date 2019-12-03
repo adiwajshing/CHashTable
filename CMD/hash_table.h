@@ -19,16 +19,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> 
+#include <string.h>
+#include "hash_function.h"
 
 ///If the threshold is crossed, the capacity of the table will be doubled
 #define HASH_TABLE_LOAD_FACTOR_THRESHOLD 0.6
 ///If set to 1, then even if there is one value at a specified index, a match will still be done
 #define HASH_TABLE_ALWAYS_CHECK_KEY_MATCH 1
 #define HASH_TABLE_DEFAULT_CAPACITY 43
-
-typedef uint32_t HashKeyType;
-typedef HashKeyType (*HashingFunction)(char *data, int len);
 
 struct HashTableElement {
     char **data_pointer;

@@ -8,15 +8,6 @@
 
 #include "hash_table.h"
 
-///Implementation of the java string hashing function
-HashKeyType java_string_hash_function (char *data, int len) {
-    HashKeyType hash = 0;
-    for (int i = 0; i < len;i++) {
-        hash += (hash<<5)-hash + data[i] ;
-    }
-    return hash;
-}
-
 HashTable *hash_table_new (void) {
     return hash_table_new_with_capacity(HASH_TABLE_DEFAULT_CAPACITY);
 }
@@ -25,7 +16,7 @@ HashTable *hash_table_new_with_capacity (int capacity) {
     table->capacity = capacity;
     table->elements = (HashTableElement *) malloc(sizeof(HashTableElement) * table->capacity);
     table->total_elements = 0;
-    table->hash_function = &java_string_hash_function;
+    table->hash_function = &hash_function_default;
     memset(table->elements, 0, sizeof(HashTableElement) * table->capacity);
     
     return table;

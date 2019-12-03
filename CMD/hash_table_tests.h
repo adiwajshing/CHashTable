@@ -86,11 +86,11 @@ void test_lots_of_elements () {
     HashTable *table = hash_table_new();
     
     for (int i = 0; i < 500000;i++) {
-        int key = (i + 47)*3;
+        uint64_t key = (i + 47)*3;
         int value = i;
         
-        hash_table_set_value(table, (char *)&value, (char *)&key, sizeof(int));
-        int *rvalue = (int *)hash_table_get_value(table, (char *)&key, sizeof(int));
+        hash_table_set_value(table, (char *)&value, (char *)&key, sizeof(uint64_t));
+        int *rvalue = (int *)hash_table_get_value(table, (char *)&key, sizeof(uint64_t));
         
         assert(rvalue == &value);
         assert(*rvalue == value);
@@ -99,10 +99,10 @@ void test_lots_of_elements () {
     printf("total elements: %d\n", table->total_elements);
     
     for (int i = 0; i < 500000;i++) {
-        int key = (i + 47)*3;
+        uint64_t key = (i + 47)*3;
         
-        hash_table_set_value(table, NULL, (char *)&key, sizeof(int));
-        int *rvalue = (int *)hash_table_get_value(table, (char *)&key, sizeof(int));
+        hash_table_set_value(table, NULL, (char *)&key, sizeof(uint64_t));
+        int *rvalue = (int *)hash_table_get_value(table, (char *)&key, sizeof(uint64_t));
         
         assert(rvalue == NULL);
     }
