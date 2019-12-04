@@ -32,24 +32,17 @@ uint8_t rotl (uint8_t n, unsigned int c)
 }
 HashKeyType hash_function_singh (char *data, int len) {
     
-   /* const int arr_size_len = 81;
-    const HashKeyType arr_sizes[] = {
-        2,3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173
-        , 179, 181, 191, 193, 197, 199, 211, 223, 227, 229
-        , 233, 239, 241, 251, 257, 263, 269, 271, 277, 281
-        , 283, 293, 307, 311, 313, 317, 331, 337, 347, 349
-        , 353, 359, 367, 373, 379, 383, 389, 397, 401, 409
-        , 419, 421
-    };*/
-    
-    
     HashKeyType hash = 11;
     HashKeyType prime1 = 31;
     HashKeyType prime2 = 311;
     
+    uint64_t item;
     for (int i = 0; i < len;i++) {
-        
-        hash = (hash * prime1) + rotl((data[i] ^ prime2) ^ (len-i), 4);
+        item = (data[i]+data[len-i]);
+        item *= prime2;
+        item ^= prime1 + (data[(i*prime2) % len]);
+
+        hash = (hash * prime1) + (item >> 4) + (item << 1);
         hash = hash * prime2;
     }
     hash += (hash << 3);
@@ -94,17 +87,13 @@ uint64_t hash_function_murmur64A(char* data, int len)
     }
 
     const unsigned char * ptr2 = (const unsigned char*)ptr;
-
-    switch(len & 7) {
-      case 7: h ^= (uint64_t)((uint64_t)ptr2[6] << (uint64_t)48);
-      case 6: h ^= (uint64_t)((uint64_t)ptr2[5] << (uint64_t)40);
-      case 5: h ^= (uint64_t)((uint64_t)ptr2[4] << (uint64_t)32);
-      case 4: h ^= (uint64_t)((uint64_t)ptr2[3] << (uint64_t)24);
-      case 3: h ^= (uint64_t)((uint64_t)ptr2[2] << (uint64_t)16);
-      case 2: h ^= (uint64_t)((uint64_t)ptr2[1] << (uint64_t)8 );
-      case 1: h ^= (uint64_t)((uint64_t)ptr2[0]                );
-              h *= m;
-    };
+    int rem = (len&7) - 1;
+    if (rem > 0) {
+        h ^= (uint64_t)((uint64_t)ptr2[rem] << (uint64_t)(8*rem));
+    } else if (rem == 0) {
+        h ^= (uint64_t)ptr2[0];
+        h *= m;
+    }
 
     h ^= h >> r;
     h *= m;
@@ -133,7 +122,7 @@ HashKeyType hash_function_CRC32 (char *data, int len) {
     }
     return ~crc;
 }
-float hash_function_compute_time (HashingFunction hash_function, int num_iterations) {
+uint32_t hash_function_compute_time (HashingFunction hash_function, int num_iterations) {
     struct timespec start, end;
     
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
@@ -145,7 +134,7 @@ float hash_function_compute_time (HashingFunction hash_function, int num_iterati
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     uint64_t n = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
     
-    return (float)n/1000000;
+    return (uint32_t)n;
 }
 float hash_function_compute_complexity_ratio (HashingFunction hash_function) {
     
@@ -156,19 +145,19 @@ float hash_function_compute_complexity_ratio (HashingFunction hash_function) {
     float ratio = (float)t2/(float)t;
     return ratio;
 }
-float hash_function_variance (HashingFunction hash_function, int number_of_unique_items, int array_size, int distribution_type) {
+char **make_distribution (int number_of_unique_items, int item_len, int distribution_type) {
 
-    const int item_len = 64;
-    char items[number_of_unique_items][item_len];
-    
+    char **items = malloc(number_of_unique_items * sizeof(char *));
+    for (int i = 0; i < number_of_unique_items;i++) {
+        items[i] = malloc(item_len);
+    }
+    int offset;
     switch (distribution_type) {
         case HASH_DIST_INCREMENTAL:
+            offset = rand();
             for (int i = 0; i < number_of_unique_items;i++) {
                 uint32_t *ptr = (uint32_t *) items[i];
-                const int divs = item_len/sizeof(uint32_t);
-                for (int j = 0; j < divs;j++) {
-                    ptr[j] = (i*number_of_unique_items + j);
-                }
+                *ptr = i + offset;
             }
             break;
         case HASH_DIST_FULLRANDOM:
@@ -191,15 +180,22 @@ float hash_function_variance (HashingFunction hash_function, int number_of_uniqu
             break;
     }
     
+    return items;
+}
+float hash_function_variance (HashingFunction hash_function, int number_of_unique_items, int array_size, int distribution_type) {
     
+    const int item_len = 64;
+    char **items = make_distribution(number_of_unique_items, item_len, distribution_type);
     
     float items_per_slot[array_size];
     memset(items_per_slot, 0, sizeof(items_per_slot[0])*array_size);
     
     for (int j = 0; j < number_of_unique_items; j ++) {
-        HashKeyType hash = hash_function( (char *)&items[j], item_len );
+        HashKeyType hash = hash_function( items[j], item_len );
         items_per_slot[ hash % array_size ] += 1;
+        free(items[j]);
     }
+    free(items);
     
     float variance = 0.0f;
     float expectation = (float)number_of_unique_items/array_size;
@@ -207,6 +203,7 @@ float hash_function_variance (HashingFunction hash_function, int number_of_uniqu
     for (int j = 0; j < array_size;j++) {
         variance += (items_per_slot[j]-expectation)*(items_per_slot[j]-expectation)/expectation;
     }
+    
     
     return variance;
 }
@@ -267,11 +264,45 @@ float hash_function_chi_square_test (HashingFunction hash_function, int distribu
         float variance = hash_function_variance(hash_function, num_items, arr_size, distribution_type);
         double chisq = chisqr(arr_size, variance);
 
-       // printf("arr_size = %d E = %f, V = %f, confidence = %f\n", arr_size, expectation, variance, chisq);
+        //printf("arr_size = %d E = %f, V = %f, confidence = %f\n", arr_size, expectation, variance, chisq);
         overall_variance += (variance-1)*(variance-1);
         overall_confidence += chisq;
     }
     overall_confidence /= arr_size_len;
     printf("overall variance = %f, chisq = %f\n", overall_variance, overall_confidence);
     return overall_variance;
+}
+float *hash_function_bit_distribution (HashingFunction hash_function, int mod, int distribution_type, int *len, float *variance) {
+    
+    int bits = ceil(log2(mod));
+    
+    float *histogram = malloc(sizeof(float) * bits);
+    memset(histogram, 0, bits * sizeof(float));
+    
+    int number_of_unique_items = 10000;
+    int item_len = 64;
+    
+    char **dist = make_distribution(number_of_unique_items, item_len, distribution_type);
+    
+    for (int j = 0; j < number_of_unique_items; j ++) {
+        HashKeyType hash = hash_function( dist[j], item_len ) % mod;
+        
+        for (int k = 0; k < bits;k++) {
+            float stat = ((hash >> k) & 1)/(float)number_of_unique_items;
+            histogram[k] += stat;
+        }
+        
+        free(dist[j]);
+    }
+    free(dist);
+    
+    *variance = 0;
+    for (int k = 0; k < bits;k++) {
+        //printf("%f ", histogram[k]);
+        *variance += (histogram[k]-0.5)*(histogram[k]-0.5)/0.5;
+    }
+    *len = bits;
+    return histogram;
+    
+    
 }

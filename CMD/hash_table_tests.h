@@ -65,7 +65,7 @@ void test_clash_value_in_table () {
     char key1[20] = "Hello my name jeff";
     char key2[20] = "hello my name jeff";
     int value1 = 500;
-    int value2 = 300;
+    float value2 = 300.0;
     
     HashTable *table = hash_table_new();
     
@@ -73,7 +73,7 @@ void test_clash_value_in_table () {
     hash_table_set_value(table, (char *)&value2, key2, 20);
     
     int *rvalue1 = (int *)hash_table_get_value(table, key1, 20);
-    int *rvalue2 = (int *)hash_table_get_value(table, key2, 20);
+    float *rvalue2 = (float *)hash_table_get_value(table, key2, 20);
     
     assert(rvalue1 == &value1);
     assert(*rvalue1 == value1);

@@ -52,6 +52,8 @@ HashTable *hash_table_new (void);
 ///Create a new hash table with specified capacity
 HashTable *hash_table_new_with_capacity (int capacity);
 
+void hash_table_free (HashTable *table);
+
 ///Get value from the hash table for a specified key
 char *hash_table_get_value (HashTable *table, char *key, int keylen);
 ///Store a value in the hash table

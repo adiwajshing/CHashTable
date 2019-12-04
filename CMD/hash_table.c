@@ -7,6 +7,7 @@
 //
 
 #include "hash_table.h"
+#include <math.h>
 
 HashTable *hash_table_new (void) {
     return hash_table_new_with_capacity(HASH_TABLE_DEFAULT_CAPACITY);
@@ -16,7 +17,7 @@ HashTable *hash_table_new_with_capacity (int capacity) {
     table->capacity = capacity;
     table->elements = (HashTableElement *) malloc(sizeof(HashTableElement) * table->capacity);
     table->total_elements = 0;
-    table->hash_function = &hash_function_default;
+    table->hash_function = hash_function_default;
     memset(table->elements, 0, sizeof(HashTableElement) * table->capacity);
     
     return table;
@@ -34,6 +35,32 @@ void free_element (HashTableElement *element, int item_count) {
     element->keys = NULL;
     element->keylens = NULL;
 }
+void hash_table_free (HashTable *table) {
+    
+    for (int i = 0; i < table->capacity;i++) {
+        free_element(table->elements+i, table->elements[i].item_count);
+    }
+    free(table->elements);
+    free(table);
+}
+int next_prime_number (int num) {
+    
+    while (1) {
+        
+        int sq = sqrt((double)num);
+        int i;
+        for (i = 2; i <= sq;i++) {
+            if (num % i == 0) {
+                break;
+            }
+        }
+        if (i > sq) {
+            return num;
+        }
+        num += 1;
+    }
+    
+}
 void increase_capacity_if_needed (HashTable *table) {
 
     float load_factor = table->total_elements/table->capacity;
@@ -42,7 +69,8 @@ void increase_capacity_if_needed (HashTable *table) {
         int old_capacity = table->capacity;
         HashTableElement *old_elements = table->elements;
         
-        table->capacity = old_capacity*2 - 1;
+        table->capacity = next_prime_number(old_capacity*2 + 1);
+        //printf("np: %d\n", table->capacity);
         table->elements = (HashTableElement *) malloc(sizeof(HashTableElement) * table->capacity);
         memset(table->elements, 0, sizeof(HashTableElement) * table->capacity);
         
