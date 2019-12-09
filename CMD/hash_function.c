@@ -38,9 +38,9 @@ HashKeyType hash_function_singh (char *data, int len) {
     
     uint64_t item;
     for (int i = 0; i < len;i++) {
-        item = (data[i]+data[len-i]);
+        item = ((uint64_t)data[i]+(uint64_t)data[len-i-1]);
         item *= prime2;
-        item ^= prime1 + (data[(i*prime2) % len]);
+        item ^= prime1 + (uint64_t)(data[(i*prime2) % len]);
 
         hash = (hash * prime1) + (item >> 4) + (item << 1);
         hash = hash * prime2;
@@ -207,7 +207,7 @@ float hash_function_variance (HashingFunction hash_function, int number_of_uniqu
     
     return variance;
 }
-float hash_function_chi_square_test (HashingFunction hash_function, int distribution_type) {
+float hash_function_chi_square_test (HashingFunction hash_function, float significance_level, int distribution_type) {
     
     const int arr_size_len = 406;
     const int arr_sizes[] = {
@@ -255,22 +255,22 @@ float hash_function_chi_square_test (HashingFunction hash_function, int distribu
     };
     const int num_items = 5000;
     
-    float overall_variance = 0.0f;
-    float overall_confidence = 0.0f;
+    float acceptances = 0;
     for (int i = 0; i < arr_size_len; i++) {
         int arr_size = arr_sizes[i];
         float expectation = (float)num_items/arr_size;
         
         float variance = hash_function_variance(hash_function, num_items, arr_size, distribution_type);
-        double chisq = chisqr(arr_size, variance);
+        double chisq = chisqr(arr_size-1, variance);
+        if (chisq > significance_level) {
+            acceptances += 1;
+        }
 
         //printf("arr_size = %d E = %f, V = %f, confidence = %f\n", arr_size, expectation, variance, chisq);
-        overall_variance += (variance-1)*(variance-1);
-        overall_confidence += chisq;
     }
-    overall_confidence /= arr_size_len;
-    printf("overall variance = %f, chisq = %f\n", overall_variance, overall_confidence);
-    return overall_variance;
+    acceptances /= arr_size_len;
+    printf("acceptances = %f\n", acceptances*100);
+    return acceptances;
 }
 float *hash_function_bit_distribution (HashingFunction hash_function, int mod, int distribution_type, int *len, float *variance) {
     

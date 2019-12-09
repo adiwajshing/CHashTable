@@ -59,7 +59,7 @@ double chisqr(int Dof, double Cv)
     ln_PV = log_igf(K, X);
     
     //printf("ln_PV=%Lf\n", ln_PV);
-    Gam = logl(tgammal(K));
+    Gam = log_gamma(K);
    // printf("Gam=%Lf, ln_PV=%Lf\n", Gam, ln_PV);
     //Gam = lgammal(K);
     //Gam = log_gamma(K);

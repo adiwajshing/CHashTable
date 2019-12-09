@@ -33,7 +33,7 @@ uint32_t hash_function_compute_time (HashingFunction hash_function, int num_iter
 float hash_function_compute_complexity_ratio (HashingFunction hash_function);
 ///Returns the variance of the hash function on the given array size
 float hash_function_variance (HashingFunction hash_function, int number_of_unique_items, int array_size, int distribution_type);
-float hash_function_chi_square_test (HashingFunction hash_function, int distribution_type);
+float hash_function_chi_square_test (HashingFunction hash_function, float significance_level, int distribution_type);
 
 float *hash_function_bit_distribution (HashingFunction hash_function, int mod, int distribution_type, int *len, float *variance);
 

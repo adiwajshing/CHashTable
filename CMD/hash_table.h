@@ -22,17 +22,22 @@
 #include <string.h>
 #include "hash_function.h"
 
-///If the threshold is crossed, the capacity of the table will be doubled
-#define HASH_TABLE_LOAD_FACTOR_THRESHOLD 0.6
-///If set to 1, then even if there is one value at a specified index, a match will still be done
+// If the threshold is crossed, the capacity of the table will be doubled
+#define HASH_TABLE_LOAD_FACTOR_THRESHOLD 0.65
+// If set to 1, then even if there is one value at a specified index, a match will still be done
 #define HASH_TABLE_ALWAYS_CHECK_KEY_MATCH 1
 #define HASH_TABLE_DEFAULT_CAPACITY 43
 
+///Structure to hold the values stored at a certain index in the array of the HashTable elements.
+///Contains the array of corresponding key, value pairs at this index. Element stores an array to account for hash value clashes.
 struct HashTableElement {
-    char **data_pointer;
+    ///Array of the pointers of data stored in the element
+    char **values;
+    ///Size of the values at the corresponding values array
+    int *valuelens;
     char **keys;
     int *keylens;
-    
+    ///Number of items in this index. Ideally should be 1.
     int item_count;
 };
 typedef struct HashTableElement HashTableElement;
@@ -51,12 +56,12 @@ typedef struct HashTable HashTable;
 HashTable *hash_table_new (void);
 ///Create a new hash table with specified capacity
 HashTable *hash_table_new_with_capacity (int capacity);
-
+///Free all memory associated with a hash table
 void hash_table_free (HashTable *table);
 
-///Get value from the hash table for a specified key
-char *hash_table_get_value (HashTable *table, char *key, int keylen);
-///Store a value in the hash table
-void hash_table_set_value (HashTable *table, char *value, char *key, int keylen);
+///Get value from the hash table for a specified key. valuelen is set to the length of the value.
+char *hash_table_get_value (HashTable *table, char *key, int keylen, int *valuelen);
+///Store a value in the hash table. Set valuelen = 0 to store the pointer to the value.
+void hash_table_set_value (HashTable *table, char *value, int valuelen, char *key, int keylen);
 
 #endif /* hash_table_h */
